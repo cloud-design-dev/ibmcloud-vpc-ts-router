@@ -10,3 +10,11 @@ export TF_VAR_project_prefix=""
 # existing VPC SSH key name to inject into the tailscale subnet router instance
 # if none is provided, a new one is created and added to all 3 regions 
 export TF_VAR_existing_ssh_key=""
+
+# Tailscale API Key
+export TF_VAR_tailscale_api_key=""
+
+# Tailscale Tailnet id
+export TF_VAR_tailscale_tailnet_id=""
+
+export TF_VAR_existing_resource_group=""
