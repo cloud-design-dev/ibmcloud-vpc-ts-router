@@ -1,18 +1,12 @@
 # IBM Cloud API key
-export TF_VAR_ibmcloud_api_key=
+export TF_VAR_ibmcloud_api_key=""
 
 # where to build/deploy Tailscale subnet router resources
-export TF_VAR_hub_region="us-south"
-
-# spoke vpc #1 vpc region
-export TF_VAR_spoke1_region="us-east"
-
-# spoke vpc #2 vpc region
-export TF_VAR_spoke2_region="ca-tor"
+export TF_VAR_ibmcloud_region="us-south"
 
 # prefix for resources to be created
-export TF_VAR_project_prefix="ts-sr"
+export TF_VAR_project_prefix=""
 
 # existing VPC SSH key name to inject into the tailscale subnet router instance
 # if none is provided, a new one is created and added to all 3 regions 
-export TF_VAR_existing_hub_ssh_key=""
+export TF_VAR_existing_ssh_key=""
