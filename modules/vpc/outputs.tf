@@ -17,3 +17,7 @@ output "vpc_subnet_id" {
 output "vpc_subnet_cidr" {
   value = ibm_is_subnet.frontend_subnet.ipv4_cidr_block
 }
+
+output "vpc_crn" {
+  value = ibm_is_vpc.vpc.crn
+}

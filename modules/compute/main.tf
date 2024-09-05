@@ -1,25 +1,17 @@
-
-# Security Group
-
-
-# Tailscale vnic
-
-resource "ibm_is_virtual_network_interface" "tailscale_subnet_router" {
+resource "ibm_is_virtual_network_interface" "compute" {
   allow_ip_spoofing         = true
   auto_delete               = false
   enable_infrastructure_nat = true
-  name                      = "${var.vpc_name}-ts-router-vnic"
-  subnet                    = ibm_is_subnet.frontend_subnet.id
+  name                      = "${var.name}-vnic"
+  subnet                    = var.subnet_id
   resource_group            = var.resource_group_id
-  security_groups           = [ibm_is_vpc.vpc.default_security_group]
-  tags                      = concat(local.tags, ["zone:${local.vpc_zones[0].zone}"])
+  security_groups           = [var.vpc_default_security_group]
+  tags                      = concat(var.tags, ["zone:${var.zone}"])
 }
 
-
-# Tailscale instance
-resource "ibm_is_instance" "tailscale_subnet_router" {
-  name           = "${var.vpc_name}-ts-router"
-  vpc            = ibm_is_vpc.vpc.id
+resource "ibm_is_instance" "compute" {
+  name           = var.name
+  vpc            = var_vpc_id
   image          = data.ibm_is_image.base.id
   profile        = var.instance_profile
   resource_group = var.resource_group_id
@@ -31,18 +23,18 @@ resource "ibm_is_instance" "tailscale_subnet_router" {
 
   boot_volume {
     auto_delete_volume = true
-    name               = "${var.vpc_name}-ts-router-boot"
   }
-
+  user_data = var.cloud_init
+  #   user_data = file("${path.module}/cloud-init.yaml")
   primary_network_attachment {
-    name = "${var.vpc_name}-primary-interface"
+    name = "${var.name}-primary-interface"
     virtual_network_interface {
-      id = ibm_is_virtual_network_interface.tailscale_subnet_router.id
+      id = ibm_is_virtual_network_interface.compute.id
     }
   }
 
-  zone = local.vpc_zones[0].zone
-  keys = [data.ibm_is_ssh_key.sshkey.id]
-  tags = concat(local.tags, ["zone:${local.vpc_zones[0].zone}"])
+  zone = var.zone
+  keys = var.ssh_key_ids
+  tags = concat(var.tags, ["zone:${var.zone}"])
 }
 

@@ -9,3 +9,13 @@ variable "base_image" {
   type        = string
   default     = "ibm-ubuntu-22-04-4-minimal-amd64-3"
 }
+
+variable "subnet_id" {}
+variable "tags" {}
+variable "name" {}
+variable "resource_group_id" {}
+variable "zone" {}
+variable "vpc_id" {}
+variable "ssh_key_ids" {}
+variable "cloud_init" {}
+variable "vpc_default_security_group" {}

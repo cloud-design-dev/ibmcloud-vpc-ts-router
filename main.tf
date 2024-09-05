@@ -149,6 +149,29 @@ module "transit_gateway" {
   name              = "${local.prefix}-transit-gateway"
   resource_group_id = module.resource_group.resource_group_id
   region            = var.ibmcloud_region
+  hub_vpc_crn       = module.hub_vpc.vpc_crn
+  prod_vpc_crn      = module.prod_vpc.vpc_crn
+  dev_vpc_crn       = module.dev_vpc.vpc_crn
+}
+
+module "ts_router" {
+  source                     = "./modules/compute"
+  name                       = "${local.prefix}-ts-router"
+  zone                       = local.vpc_zones[0].zone
+  vpc_id                     = module.hub_vpc.vpc_id
+  subnet_id                  = module.hub_vpc.vpc_subnet_id
+  resource_group_id          = module.resource_group.resource_group_id
+  tags                       = local.tags
+  vpc_default_security_group = module.hub_vpc.default_security_group
+  cloud_init = base64encode(templatefile("./ts-router.yaml", {
+    hub_route             = local.hub_subnet_cidr
+    prod_route            = local.prod_subnet_cidr
+    dev_route             = local.dev_subnet_cidr
+    tailscale_tailnet_key = tailscale_tailnet_key.lab.key
+  }))
+
+  # = templatefile("./cloud-init/ts-router.yaml", { tailscale_tailnet_key = tailscale_tailnet_key.lab.key })
+  ssh_key_ids = local.ssh_key_ids
 }
 
 # module "tailscale" {
