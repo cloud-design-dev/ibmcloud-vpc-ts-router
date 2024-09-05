@@ -1,2 +1,0 @@
-# TGW
-# VPC connections
