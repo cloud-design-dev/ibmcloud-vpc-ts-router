@@ -8,4 +8,4 @@ Explain what it will do via its subnet router magic
 
 ## Diagram
 
-![Diagram of Tailscale deployment](./images/tailscale-vpcdrawio.drawio.png)
+![Diagram of Tailscale deployment](./images/ibmcloud-ts-subnet-router.png)
