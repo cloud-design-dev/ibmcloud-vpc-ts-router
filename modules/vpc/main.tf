@@ -6,9 +6,9 @@ resource "ibm_is_vpc" "vpc" {
   resource_group              = var.resource_group_id
   classic_access              = var.classic_access
   address_prefix_management   = var.default_address_prefix
-  default_network_acl_name    = "${var.vpc_name}-defaultACL"
-  default_security_group_name = "${var.vpc_name}-defaultSG"
-  default_routing_table_name  = "${var.vpc_name}-defaultRT"
+  default_network_acl_name    = "${var.vpc_name}-default-acl"
+  default_security_group_name = "${var.vpc_name}-default-sg"
+  default_routing_table_name  = "${var.vpc_name}-default-rt"
   tags                        = var.tags
 }
 
@@ -31,6 +31,7 @@ resource "ibm_is_public_gateway" "pgw" {
 
 # Subnet
 resource "ibm_is_subnet" "frontend_subnet" {
+  depends_on      = [ibm_is_vpc_address_prefix.vpc]
   name            = "${var.vpc_name}-${var.zone}-subnet"
   resource_group  = var.resource_group_id
   vpc             = ibm_is_vpc.vpc.id

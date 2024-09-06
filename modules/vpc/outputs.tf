@@ -21,3 +21,7 @@ output "vpc_subnet_cidr" {
 output "vpc_crn" {
   value = ibm_is_vpc.vpc.crn
 }
+
+output "default_security_group_name" {
+  value = "${var.vpc_name}-default-sg"
+}

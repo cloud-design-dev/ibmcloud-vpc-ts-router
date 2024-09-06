@@ -1,3 +1,7 @@
+data "ibm_is_image" "base" {
+  name = var.base_image
+}
+
 resource "ibm_is_virtual_network_interface" "compute" {
   allow_ip_spoofing         = true
   auto_delete               = false
@@ -11,7 +15,7 @@ resource "ibm_is_virtual_network_interface" "compute" {
 
 resource "ibm_is_instance" "compute" {
   name           = var.name
-  vpc            = var_vpc_id
+  vpc            = var.vpc_id
   image          = data.ibm_is_image.base.id
   profile        = var.instance_profile
   resource_group = var.resource_group_id

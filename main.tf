@@ -52,11 +52,16 @@ module "add_rules_to_hub_vpc_security_group" {
   source                       = "terraform-ibm-modules/security-group/ibm"
   add_ibm_cloud_internal_rules = true
   use_existing_security_group  = true
-  existing_security_group_name = module.hub_vpc.default_security_group
-  security_group_rules = [{
-    name      = "allow-ts-cidr-ssh-inbound"
-    direction = "inbound"
-    remote    = "100.64.0.0/10"
+  existing_security_group_name = module.hub_vpc.default_security_group_name
+  security_group_rules = [
+    {
+      name      = "allow-ts-cidr-ssh-inbound"
+      direction = "inbound"
+      remote    = "100.64.0.0/10"
+      tcp = {
+        port_min = 22
+        port_max = 22
+      }
     },
     {
       name      = "allow-icmp-inbound"
@@ -85,7 +90,7 @@ module "add_rules_to_prod_vpc_security_group" {
   source                       = "terraform-ibm-modules/security-group/ibm"
   add_ibm_cloud_internal_rules = true
   use_existing_security_group  = true
-  existing_security_group_name = module.prod_vpc.default_security_group
+  existing_security_group_name = module.prod_vpc.default_security_group_name
   security_group_rules = [{
     name      = "allow-hub-cidr-ssh-inbound"
     direction = "inbound"
@@ -122,7 +127,7 @@ module "add_rules_to_dev_vpc_security_group" {
   source                       = "terraform-ibm-modules/security-group/ibm"
   add_ibm_cloud_internal_rules = true
   use_existing_security_group  = true
-  existing_security_group_name = module.dev_vpc.default_security_group
+  existing_security_group_name = module.dev_vpc.default_security_group_name
   security_group_rules = [{
     name      = "allow-hub-cidr-ssh-inbound"
     direction = "inbound"
@@ -161,21 +166,48 @@ module "ts_router" {
   vpc_id                     = module.hub_vpc.vpc_id
   subnet_id                  = module.hub_vpc.vpc_subnet_id
   resource_group_id          = module.resource_group.resource_group_id
-  tags                       = local.tags
+  tags                       = concat(local.tags, ["environment:hub"])
   vpc_default_security_group = module.hub_vpc.default_security_group
-  cloud_init = base64encode(templatefile("./ts-router.yaml", {
+  cloud_init = templatefile("./ts-router.yaml", {
     hub_route             = local.hub_subnet_cidr
     prod_route            = local.prod_subnet_cidr
     dev_route             = local.dev_subnet_cidr
     tailscale_tailnet_key = tailscale_tailnet_key.lab.key
-  }))
-
-  # = templatefile("./cloud-init/ts-router.yaml", { tailscale_tailnet_key = tailscale_tailnet_key.lab.key })
+  })
   ssh_key_ids = local.ssh_key_ids
 }
 
-# module "tailscale" {
-# depends_on = [module.ts_compute]
-#   source     = "./modules/tailscale"
-#   lab_routes = [local.hub_subnet_cidr, local.prod_subnet_cidr, local.dev_subnet_cidr]
-# }
+module "prod_compute" {
+  depends_on                 = [module.ts_router]
+  source                     = "./modules/compute"
+  name                       = "${local.prefix}-prod-instance"
+  zone                       = local.vpc_zones[0].zone
+  vpc_id                     = module.prod_vpc.vpc_id
+  subnet_id                  = module.prod_vpc.vpc_subnet_id
+  resource_group_id          = module.resource_group.resource_group_id
+  tags                       = concat(local.tags, ["environment:production"])
+  vpc_default_security_group = module.prod_vpc.default_security_group
+  cloud_init                 = file("./generic.yaml")
+  ssh_key_ids                = local.ssh_key_ids
+}
+
+module "dev_compute" {
+  depends_on                 = [module.prod_compute]
+  source                     = "./modules/compute"
+  name                       = "${local.prefix}-dev-instance"
+  zone                       = local.vpc_zones[0].zone
+  vpc_id                     = module.dev_vpc.vpc_id
+  subnet_id                  = module.dev_vpc.vpc_subnet_id
+  resource_group_id          = module.resource_group.resource_group_id
+  tags                       = concat(local.tags, ["environment:development"])
+  vpc_default_security_group = module.dev_vpc.default_security_group
+  cloud_init                 = file("./generic.yaml")
+  ssh_key_ids                = local.ssh_key_ids
+}
+
+#module "tailscale" {
+#  depends_on         = [module.dev_compute]
+#  source             = "./modules/tailscale"
+#  lab_routes         = [local.hub_subnet_cidr, local.prod_subnet_cidr, local.dev_subnet_cidr]
+#  ts_router_hostname = "${local.prefix}-ts-router"
+#}
